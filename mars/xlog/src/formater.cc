@@ -131,8 +131,7 @@ void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _lo
         // _log.AllocWrite(30*1024, false);
         int ret = snprintf((char*)_log.PosPtr(),
                            1024,
-                           "[%s][%s][%" PRIdMAX ", %" PRIdMAX "%s][%s][%s:%d, %s][",  // **CPPLINT SKIP**
-                           _logbody ? levelStrings[_info->level] : levelStrings[kLevelFatal],
+                           "[%s][%" PRIdMAX ", %" PRIdMAX "%s][%s][%s:%d, %s][%s]",  // **CPPLINT SKIP**
                            temp_time,
                            _info->pid,
                            _info->tid,
@@ -140,7 +139,8 @@ void log_formater(const XLoggerInfo* _info, const char* _logbody, PtrBuffer& _lo
                            _info->tag ? _info->tag : "",
                            filename,
                            _info->line,
-                           strFuncName);
+                           strFuncName,
+                           _logbody ? levelStrings[_info->level] : levelStrings[kLevelFatal]);
 
         assert(0 <= ret);
         _log.Length(_log.Pos() + ret, _log.Length() + ret);

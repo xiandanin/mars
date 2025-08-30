@@ -36,6 +36,7 @@ enum TAppenderMode {
 enum TCompressMode {
     kZlib,
     kZstd,
+    kNoCompress,  // 新增：不压缩选项
 };
 
 enum TFileIOAction {

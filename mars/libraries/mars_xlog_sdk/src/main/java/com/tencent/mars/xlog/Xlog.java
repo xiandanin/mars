@@ -26,6 +26,7 @@ public class Xlog implements Log.LogImp {
 
 	public static final int ZLIB_MODE = 0;
 	public static final int ZSTD_MODE = 1;
+	public static final int NO_COMPRESS_MODE = 2;  // 新增：不压缩模式
 
 	static class XLoggerInfo {
 		public int level;
@@ -50,7 +51,11 @@ public class Xlog implements Log.LogImp {
 		public int cachedays = 0;
 	}
 
-    public static void open(boolean isLoadLib, int level, int mode, String cacheDir, String logDir, String nameprefix, String pubkey) {
+	public static void open(boolean isLoadLib, int level, int mode, String cacheDir, String logDir, String nameprefix, String pubkey) {
+		open(isLoadLib, level, mode, cacheDir, logDir, nameprefix, pubkey, ZLIB_MODE);
+	}
+
+    public static void open(boolean isLoadLib, int level, int mode, String cacheDir, String logDir, String nameprefix, String pubkey, int compressmode) {
 		if (isLoadLib) {
 			System.loadLibrary("c++_shared");
 			System.loadLibrary("marsxlog");
@@ -62,7 +67,7 @@ public class Xlog implements Log.LogImp {
 		logConfig.logdir = logDir;
 		logConfig.nameprefix = nameprefix;
 		logConfig.pubkey = pubkey;
-		logConfig.compressmode = ZLIB_MODE;
+		logConfig.compressmode = compressmode;
 		logConfig.compresslevel = 0;
 		logConfig.cachedir = cacheDir;
 		logConfig.cachedays = 0;

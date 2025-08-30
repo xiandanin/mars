@@ -45,6 +45,12 @@ const int MAGIC_SYNC_NO_CRYPT_ZSTD_START = 0x0B;
 const int MAGIC_ASYNC_ZSTD_START = 0x0C;
 const int MAGIC_ASYNC_NO_CRYPT_ZSTD_START = 0x0D;
 
+// 不压缩模式的魔数
+const int MAGIC_SYNC_NO_COMPRESS_START = 0x0E;
+const int MAGIC_SYNC_NO_CRYPT_NO_COMPRESS_START = 0x0F;
+const int MAGIC_ASYNC_NO_COMPRESS_START = 0x10;
+const int MAGIC_ASYNC_NO_CRYPT_NO_COMPRESS_START = 0x11;
+
 const int MAGIC_END = 0x00;
 const int BASE_KEY = 0xCC;
 
@@ -109,7 +115,9 @@ bool isGoodLogBuffer(const char* buffer, size_t bufferSize, size_t offset, int c
                || MAGIC_SYNC_NO_CRYPT_ZLIB_START == buffer[offset] || MAGIC_ASYNC_NO_CRYPT_ZLIB_START == buffer[offset]
                || MAGIC_ASYNC_ZSTD_START == buffer[offset] || MAGIC_SYNC_ZSTD_START == buffer[offset]
                || MAGIC_SYNC_NO_CRYPT_ZSTD_START == buffer[offset]
-               || MAGIC_ASYNC_NO_CRYPT_ZSTD_START == buffer[offset]) {
+               || MAGIC_ASYNC_NO_CRYPT_ZSTD_START == buffer[offset]
+               || MAGIC_SYNC_NO_COMPRESS_START == buffer[offset] || MAGIC_SYNC_NO_CRYPT_NO_COMPRESS_START == buffer[offset]
+               || MAGIC_ASYNC_NO_COMPRESS_START == buffer[offset] || MAGIC_ASYNC_NO_CRYPT_NO_COMPRESS_START == buffer[offset]) {
         headerLen = 1 + 2 + 1 + 1 + 4 + 64;
         cryptKeyLen = 64;
     } else {
@@ -150,7 +158,7 @@ size_t getLogStartPos(const char* buffer, size_t bufferSize, int count) {
         if (offset >= bufferSize) {
             break;
         }
-        if (buffer[offset] >= MAGIC_CRYPT_START && buffer[offset] <= MAGIC_ASYNC_NO_CRYPT_ZSTD_START) {
+        if (buffer[offset] >= MAGIC_CRYPT_START && buffer[offset] <= MAGIC_ASYNC_NO_CRYPT_NO_COMPRESS_START) {
             if (isGoodLogBuffer(buffer, bufferSize, offset, count)) {
                 return offset;
             }
@@ -426,9 +434,11 @@ int decodeBuffer(const char* buffer,
         tmpBuffer = decompBuffer;
         tmpBufferSize = decompBufferSize;
     } else if (MAGIC_SYNC_ZLIB_START == buffer[offset] || MAGIC_SYNC_NO_CRYPT_ZLIB_START == buffer[offset]
-               || MAGIC_SYNC_ZSTD_START == buffer[offset] || MAGIC_SYNC_NO_CRYPT_ZSTD_START == buffer[offset]) {
+               || MAGIC_SYNC_ZSTD_START == buffer[offset] || MAGIC_SYNC_NO_CRYPT_ZSTD_START == buffer[offset]
+               || MAGIC_SYNC_NO_COMPRESS_START == buffer[offset] || MAGIC_SYNC_NO_CRYPT_NO_COMPRESS_START == buffer[offset]) {
         memcpy(tmpBuffer, buffer + offset + headerLen, length);
-    } else if (MAGIC_ASYNC_ZLIB_START == buffer[offset] || MAGIC_ASYNC_ZSTD_START == buffer[offset]) {
+    } else if (MAGIC_ASYNC_ZLIB_START == buffer[offset] || MAGIC_ASYNC_ZSTD_START == buffer[offset]
+               || MAGIC_ASYNC_NO_COMPRESS_START == buffer[offset]) {
         memcpy(tmpBuffer, buffer + offset + headerLen, length);
         unsigned char clientPubKey[cryptKeyLen];
         memcpy(clientPubKey, buffer + offset + headerLen - cryptKeyLen, cryptKeyLen);
@@ -478,12 +488,18 @@ int decodeBuffer(const char* buffer,
                 fputs("Decompress error", stderr);
                 exit(6);
             }
+        } else if (MAGIC_ASYNC_NO_COMPRESS_START == buffer[offset]) {
+            // 不压缩模式：直接使用原始数据，不需要解压缩
+            decompBuffer = tmpBuffer;
+            decompBufferSize = tmpBufferSize;
+            tmpBuffer = NULL;  // 防止被释放
         }
 
         free(tmpBuffer);
         tmpBuffer = decompBuffer;
         tmpBufferSize = decompBufferSize;
-    } else if (MAGIC_ASYNC_NO_CRYPT_ZLIB_START == buffer[offset] || MAGIC_ASYNC_NO_CRYPT_ZSTD_START == buffer[offset]) {
+    } else if (MAGIC_ASYNC_NO_CRYPT_ZLIB_START == buffer[offset] || MAGIC_ASYNC_NO_CRYPT_ZSTD_START == buffer[offset]
+               || MAGIC_ASYNC_NO_CRYPT_NO_COMPRESS_START == buffer[offset]) {
         memcpy(tmpBuffer, buffer + offset + headerLen, length);
         char* decompBuffer;
         size_t decompBufferSize;
@@ -497,6 +513,11 @@ int decodeBuffer(const char* buffer,
                 fputs("Decompress error", stderr);
                 exit(6);
             }
+        } else if (MAGIC_ASYNC_NO_CRYPT_NO_COMPRESS_START == buffer[offset]) {
+            // 不压缩模式：直接使用原始数据，不需要解压缩
+            decompBuffer = tmpBuffer;
+            decompBufferSize = tmpBufferSize;
+            tmpBuffer = NULL;  // 防止被释放
         }
 
         free(tmpBuffer);

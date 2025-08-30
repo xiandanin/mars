@@ -30,6 +30,7 @@ public class Xlog implements Log.LogImp {
 
 	public static final int ZLIB_MODE = 0;
 	public static final int ZSTD_MODE = 1;
+	public static final int NO_COMPRESS_MODE = 2;  // 新增：不压缩模式
 
 	static class XLoggerInfo {
 		public int level;

@@ -30,13 +30,21 @@ class LogMagicNum {
     static const char kMagicAsyncZstdStart = '\x0C';
     static const char kMagicAsyncNoCryptZstdStart = '\x0D';
 
+    // 不压缩模式的魔数
+    static const char kMagicSyncNoCompressStart = '\x0E';
+    static const char kMagicSyncNoCryptNoCompressStart = '\x0F';
+    static const char kMagicAsyncNoCompressStart = '\x10';
+    static const char kMagicAsyncNoCryptNoCompressStart = '\x11';
+
     static const char kMagicEnd = '\0';
 
     static bool MagicStartIsValid(char _magic) {
         return kMagicSyncZlibStart == _magic || kMagicSyncNoCryptZlibStart == _magic || kMagicAsyncZlibStart == _magic
                || kMagicAsyncNoCryptZlibStart == _magic || kMagicSyncZstdStart == _magic
                || kMagicSyncNoCryptZstdStart == _magic || kMagicAsyncZstdStart == _magic
-               || kMagicAsyncNoCryptZstdStart == _magic;
+               || kMagicAsyncNoCryptZstdStart == _magic || kMagicSyncNoCompressStart == _magic
+               || kMagicSyncNoCryptNoCompressStart == _magic || kMagicAsyncNoCompressStart == _magic
+               || kMagicAsyncNoCryptNoCompressStart == _magic;
     }
 };
 
